@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MA TOUDOU</title>
+<meta name="theme-color" content="#1f5f5b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MA TOUDOU">
+<style>
+/* Mise en page : en-tête fixe, onglets de catégories défilants, liste groupée par priorité, bouton d'ajout flottant */
+:root {
+  --bg: #f3f5f3;
+  --surface: #ffffff;
+  --ink: #1b2321;
+  --ink-2: #56625f;
+  --line: #dde2df;
+  --accent: #1f5f5b;
+  --accent-ink: #ffffff;
+  --p1: #2a7035;
+  --p1-bg: #e3f1e4;
+  --p2: #a85500;
+  --p2-bg: #fdecd3;
+  --p3: #c0272d;
+  --p3-bg: #fbe1df;
+  --font-display: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121715;
+    --surface: #1b2220;
+    --ink: #e8eeec;
+    --ink-2: #9fb0ab;
+    --line: #2c3633;
+    --accent: #5fb3ab;
+    --accent-ink: #0e1513;
+    --p1: #6fcf7c;
+    --p1-bg: #1f3a24;
+    --p2: #f0a04b;
+    --p2-bg: #43301a;
+    --p3: #ff8a82;
+    --p3-bg: #4a2321;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121715;
+  --surface: #1b2220;
+  --ink: #e8eeec;
+  --ink-2: #9fb0ab;
+  --line: #2c3633;
+  --accent: #5fb3ab;
+  --accent-ink: #0e1513;
+  --p1: #6fcf7c;
+  --p1-bg: #1f3a24;
+  --p2: #f0a04b;
+  --p2-bg: #43301a;
+  --p3: #ff8a82;
+  --p3-bg: #4a2321;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  padding-bottom: 110px;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+header.top {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg);
+  padding-top: 12px;
+}
+.bar { display: flex; align-items: center; gap: 8px; }
+.bar h1 { font-family: var(--font-display); font-size: 20px; margin: 0; flex: 1; letter-spacing: -0.01em; }
+.icon-btn {
+  min-height: 34px; padding: 0 11px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13px;
+}
+.status { font-size: 12px; color: var(--ink-2); margin: 0 0 6px; }
+.search { margin-bottom: 8px; }
+.search input {
+  width: 100%; min-height: 44px; padding: 0 14px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface);
+}
+
+.tabs { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 8px; }
+.tabrow { display: flex; gap: 6px; }
+.tabrow.scroll { overflow-x: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+.tabrow.scroll::-webkit-scrollbar { display: none; }
+.tabrow:not(.scroll) .chip { flex: 1 1 0; justify-content: center; padding: 0 8px; }
+.chip {
+  flex: 0 0 auto; min-height: 34px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.chip .n { font-variant-numeric: tabular-nums; color: var(--ink-2); font-weight: 600; }
+.chip[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip[aria-current="true"] .n { color: var(--accent-ink); opacity: 0.85; }
+.subs { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 0 10px; }
+.subs .chip { min-height: 30px; font-size: 12px; }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px; margin: 6px 0 10px; display: flex; flex-direction: column; gap: 10px;
+}
+.panel .addrow { display: flex; gap: 8px; }
+.panel input[type="text"] {
+  flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--bg);
+}
+.btn {
+  min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); font-weight: 700;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--p3); border-color: var(--p3); }
+.checkline { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.checkline input { width: 20px; height: 20px; }
+.habs-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.habs-head .links { display: flex; gap: 6px; }
+.linkbtn { background: none; border: 0; color: var(--accent); font-weight: 700; font-size: 13px; min-height: 36px; padding: 0 8px; }
+.habs { display: flex; flex-wrap: wrap; gap: 8px; }
+.hab {
+  min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px dashed var(--ink-2);
+  background: transparent; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+}
+.hab[disabled] { opacity: 0.5; border-style: solid; cursor: default; }
+.hab .x { color: var(--p3); font-weight: 700; }
+.hint { font-size: 13px; color: var(--ink-2); margin: 0; }
+
+.bkbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 2px 6px 2px 12px; margin: 6px 0; font-size: 13px; }
+ul.help { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+.summary { font-size: 14px; color: var(--ink-2); margin: 4px 0 6px; }
+.group { margin: 12px 0 4px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; display: flex; gap: 8px; align-items: baseline; }
+.group .n { font-family: var(--font-body); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.group.g1 { color: var(--p1); } .group.g2 { color: var(--p2); } .group.g3 { color: var(--p3); } .group.glate { color: var(--p3); } .group.gtoday { color: var(--ink); }
+
+.row {
+  display: flex; align-items: stretch; gap: 2px; background: var(--surface);
+  border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 10px; margin: 0 0 6px;
+}
+.row.p1 { border-left-color: var(--p1); }
+.row.p2 { border-left-color: var(--p2); }
+.row.p3 { border-left-color: var(--p3); }
+.row.plain { border-left-color: var(--line); }
+.check { flex: 0 0 auto; width: 44px; display: grid; place-items: center; background: none; border: 0; padding: 0; }
+.check span { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-2); display: block; }
+.check:active span, .check:hover span { background: var(--accent); border-color: var(--accent); }
+.rbody { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 8px 8px 8px 0; }
+.rbody.nocheck { padding-left: 14px; }
+.rtitle { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.rmeta { font-size: 12px; color: var(--ink-2); margin-top: 1px; overflow-wrap: anywhere; }
+.rmeta .late { color: var(--p3); font-weight: 700; }
+.rnote { font-size: 14px; color: var(--ink-2); margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.rside { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; padding: 6px 8px 6px 0; }
+.pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.p1 { background: var(--p1-bg); color: var(--p1); }
+.pill.p2 { background: var(--p2-bg); color: var(--p2); }
+.pill.p3 { background: var(--p3-bg); color: var(--p3); }
+.mini { font-size: 12px; font-weight: 700; min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); }
+.mini[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+.empty { text-align: center; color: var(--ink-2); padding: 40px 16px; }
+
+.fab {
+  position: fixed; right: 16px; bottom: 20px; z-index: 30; min-height: 56px; padding: 0 22px; border-radius: 28px;
+  border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+.fab[disabled] { opacity: 0.5; }
+
+.toast {
+  position: fixed; left: 16px; right: 16px; bottom: 90px; z-index: 50; max-width: 560px; margin: 0 auto;
+  background: var(--ink); color: var(--bg); border-radius: 12px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px; justify-content: space-between;
+}
+.toast button { background: none; border: 0; color: var(--bg); font-weight: 700; text-decoration: underline; min-height: 40px; padding: 0 6px; }
+
+.overlay { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; }
+.sheet {
+  background: var(--bg); width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto;
+  border-radius: 18px 18px 0 0; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.sheet h2 { font-family: var(--font-display); font-size: 18px; margin: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label, .field .lbl { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.field input, .field select, .field textarea {
+  min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); width: 100%;
+}
+.field textarea { min-height: 96px; resize: vertical; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.seg button { min-height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); font-weight: 700; font-size: 14px; }
+.seg button[data-p="1"][aria-pressed="true"] { border-color: var(--p1); background: var(--p1-bg); color: var(--p1); }
+.seg button[data-p="2"][aria-pressed="true"] { border-color: var(--p2); background: var(--p2-bg); color: var(--p2); }
+.seg button[data-p="3"][aria-pressed="true"] { border-color: var(--p3); background: var(--p3-bg); color: var(--p3); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions .btn { flex: 1; }
+.err { color: var(--p3); font-size: 13px; font-weight: 600; margin: 0; }
+textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); padding: 10px; font-size: 13px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .row { transition: opacity .15s; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <h1>MA TOUDOU</h1>
+      <button class="icon-btn" id="btnSearch" type="button" aria-expanded="false">Rechercher</button>
+      <button class="icon-btn" id="btnBackup" type="button">Sauvegarde</button>
+    </div>
+    <div class="status" id="status" role="status"></div>
+    <div class="search" id="searchBox" hidden>
+      <input id="q" type="search" placeholder="Rechercher une tâche, une note, une personne" aria-label="Rechercher">
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Catégories"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="bkbar" id="backupBar" hidden></div>
+  <div class="subs" id="subs" hidden></div>
+  <section class="panel" id="panel" hidden aria-label="Courses alimentaires">
+    <div class="addrow">
+      <input id="foodInput" type="text" placeholder="Ajouter un article (lait, pain…)" aria-label="Nouvel article alimentaire" autocomplete="off">
+      <button class="btn primary" id="foodAdd" type="button">Ajouter</button>
+    </div>
+    <label class="checkline"><input type="checkbox" id="foodHab"> Ajouter aussi à mes habituels</label>
+    <div>
+      <div class="habs-head">
+        <span>Mes habituels</span>
+        <span class="links">
+          <button class="linkbtn" id="habAll" type="button">Tout ajouter</button>
+          <button class="linkbtn" id="habEdit" type="button" aria-pressed="false">Modifier</button>
+        </span>
+      </div>
+      <div class="habs" id="habs"></div>
+      <p class="hint" id="habHint" hidden>Aucun habituel pour l'instant. Coche « Ajouter aussi à mes habituels » en ajoutant un article, ou touche « Habituel » sur un article de la liste.</p>
+    </div>
+  </section>
+  <div id="list"></div>
+</main>
+
+<button class="fab" id="fab" type="button" disabled>+ Ajouter</button>
+<div class="toast" id="toast" role="status" hidden><span id="toastMsg"></span><button id="toastUndo" type="button">Annuler</button></div>
+<div id="modal"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CATS = [
+    { id: 'admin-perso', name: 'Admin perso' },
+    { id: 'admin-pro', name: 'Admin pro' },
+    { id: 'rdv', name: 'RDV à prendre' },
+    { id: 'appels', name: 'Appels et SMS' },
+    { id: 'paiements', name: 'Paiements' },
+    { id: 'memo', name: 'Mémo', note: true },
+    { id: 'loisirs', name: 'Loisirs' },
+    { id: 'courses', name: 'Courses', subs: ['Alimentaire', 'Achats à prévoir'] },
+    { id: 'appart', name: 'Maison', subs: ['Entretien et gestion', 'Travaux et déco'] },
+    { id: 'proches', name: 'Proches', who: true }
+  ];
+  var CAT = {};
+  CATS.forEach(function (c) { CAT[c.id] = c; });
+  var PRIO = { 1: 'Peu prioritaire', 2: 'Moyen', 3: 'Urgent' };
+  var REC = { '': 'Aucune', d: 'Chaque jour', w: 'Chaque semaine', m: 'Chaque mois', y: 'Chaque année' };
+  var FOOD = 'Alimentaire';
+
+  var tasks = [];
+  var habs = [];
+  var view = 'today';
+  var subFilter = 'all';
+  var query = '';
+  var habEditing = false;
+  var store = { mode: 'init', tasksCol: null, habsCol: null };
+
+  function $(id) { return document.getElementById(id); }
+  function h(tag, props) {
+    var e = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        var v = props[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === 'class') e.className = v;
+        else if (k === 'text') e.textContent = v;
+        else if (k === 'value') e.value = v;
+        else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v === true ? '' : v);
+      });
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var kids = Array.isArray(arguments[i]) ? arguments[i] : [arguments[i]];
+      kids.forEach(function (c) {
+        if (c === null || c === undefined || c === false) return;
+        e.append(c.nodeType ? c : document.createTextNode(String(c)));
+      });
+    }
+    return e;
+  }
+
+  /* ---------- dates ---------- */
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function today() { return iso(new Date()); }
+  function parse(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function addInterval(s, rec) {
+    var d = parse(s);
+    var day = d.getDate();
+    if (rec === 'd') d.setDate(day + 1);
+    else if (rec === 'w') d.setDate(day + 7);
+    else if (rec === 'm') {
+      d.setDate(1); d.setMonth(d.getMonth() + 1);
+      d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+    } else if (rec === 'y') {
+      var mo = d.getMonth();
+      d.setDate(1); d.setFullYear(d.getFullYear() + 1); d.setMonth(mo);
+      d.setDate(Math.min(day, new Date(d.getFullYear(), mo + 1, 0).getDate()));
+    }
+    return iso(d);
+  }
+  function nextDate(t) {
+    var td = today();
+    var n = addInterval(t.due || td, t.rec);
+    while (n <= td) n = addInterval(n, t.rec);
+    return n;
+  }
+  function fmtDate(s) {
+    var td = today();
+    if (s === td) return "Aujourd'hui";
+    var tm = parse(td); tm.setDate(tm.getDate() + 1);
+    if (s === iso(tm)) return 'Demain';
+    return parse(s).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  /* ---------- data ---------- */
+  function newId() { return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function norm(id, d) {
+    d = d || {};
+    return {
+      id: id, title: String(d.title || ''), cat: CAT[d.cat] ? d.cat : 'admin-perso', sub: String(d.sub || ''),
+      who: String(d.who || ''), prio: [1, 2, 3].indexOf(d.prio) >= 0 ? d.prio : 2, due: String(d.due || ''),
+      rec: REC[d.rec] !== undefined ? (d.rec || '') : '', note: String(d.note || ''), created: Number(d.created) || 0
+    };
+  }
+  function isFood(t) { return t.cat === 'courses' && t.sub === FOOD; }
+  function cmp(a, b) {
+    if (a.prio !== b.prio) return b.prio - a.prio;
+    var ad = a.due || '9999', bd = b.due || '9999';
+    if (ad !== bd) return ad < bd ? -1 : 1;
+    return a.created - b.created;
+  }
+  var KEY = 'toudou.v1';
+  var KEY_BK = 'toudou.lastBackup';
+  var KEY_FIRST = 'toudou.firstUse';
+  var KEY_WELCOME = 'toudou.welcomeSeen';
+  var storageOk = true;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function persistLocal() {
+    var ok = lsSet(KEY, JSON.stringify({ tasks: tasks, habs: habs }));
+    if (!ok && storageOk) { storageOk = false; toast("Enregistrement impossible sur cet appareil. Vérifie l'espace disponible."); }
+  }
+  function loadLocal() {
+    var raw = lsGet(KEY);
+    if (!raw) return;
+    try {
+      var o = JSON.parse(raw);
+      tasks = (o.tasks || []).map(function (t) { return norm(t.id, t); });
+      habs = (o.habs || []).filter(function (x) { return x && x.name; });
+    } catch (e) { /* données illisibles : copie de secours faite au démarrage */ }
+  }
+  function saveTask(t) {
+    var i = tasks.findIndex(function (x) { return x.id === t.id; });
+    if (i >= 0) tasks[i] = t; else tasks.push(t);
+    persistLocal(); render();
+    return Promise.resolve();
+  }
+  function removeTask(id) {
+    tasks = tasks.filter(function (x) { return x.id !== id; });
+    persistLocal(); render();
+    return Promise.resolve();
+  }
+  function findHab(name) {
+    var n = name.trim().toLowerCase();
+    return habs.find(function (x) { return x.name.trim().toLowerCase() === n; });
+  }
+  function addHab(name) {
+    if (!name.trim() || findHab(name)) return Promise.resolve();
+    habs.push({ id: newId(), name: name.trim(), created: Date.now() });
+    persistLocal(); render();
+    return Promise.resolve();
+  }
+  function removeHab(id) {
+    habs = habs.filter(function (x) { return x.id !== id; });
+    persistLocal(); render();
+    return Promise.resolve();
+  }
+
+  /* ---------- toast ---------- */
+  var toastTimer = null, toastFn = null;
+  function toast(msg, undo) {
+    $('toastMsg').textContent = msg;
+    toastFn = undo || null;
+    $('toastUndo').hidden = !undo;
+    $('toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { $('toast').hidden = true; toastFn = null; }, 6000);
+  }
+  $('toastUndo').addEventListener('click', function () {
+    var f = toastFn; $('toast').hidden = true; toastFn = null; clearTimeout(toastTimer);
+    if (f) f();
+  });
+
+  /* ---------- actions ---------- */
+  function complete(t) {
+    var old = Object.assign({}, t);
+    if (t.rec) {
+      var nd = nextDate(t);
+      saveTask(Object.assign({}, t, { due: nd }));
+      toast('Reprogrammée : ' + fmtDate(nd), function () { saveTask(old); });
+    } else {
+      removeTask(t.id);
+      toast('Tâche terminée et supprimée', function () { saveTask(old); });
+    }
+  }
+  function foodInList(name) {
+    var n = name.trim().toLowerCase();
+    return tasks.some(function (t) { return isFood(t) && t.title.trim().toLowerCase() === n; });
+  }
+  function addFood(name) {
+    name = name.trim();
+    if (!name || foodInList(name)) return Promise.resolve();
+    return saveTask({ id: newId(), title: name, cat: 'courses', sub: FOOD, who: '', prio: 2, due: '', rec: '', note: '', created: Date.now() });
+  }
+
+  /* ---------- rendering ---------- */
+  function counts() {
+    var c = { today: 0, late: 0, all: 0 };
+    CATS.forEach(function (k) { c[k.id] = 0; });
+    var td = today();
+    tasks.forEach(function (t) {
+      c[t.cat]++;
+      if (t.cat !== 'memo' && !isFood(t)) {
+        c.all++;
+        if (t.due === td) c.today++; else if (t.due && t.due < td) c.late++;
+      }
+    });
+    return c;
+  }
+  function renderTabs() {
+    var c = counts();
+    var items = [{ id: 'today', name: "Aujourd'hui", n: c.today }, { id: 'late', name: 'En retard', n: c.late }, { id: 'all', name: 'Toutes', n: c.all }]
+      .concat(CATS.map(function (k) { return { id: k.id, name: k.name, n: c[k.id] }; }));
+    var nav = $('tabs');
+    var oldRow = nav.querySelector('.scroll');
+    var sl = oldRow ? oldRow.scrollLeft : 0;
+    nav.textContent = '';
+    var r1 = h('div', { class: 'tabrow' });
+    var r2 = h('div', { class: 'tabrow scroll' });
+    items.forEach(function (it, i) {
+      (i < 3 ? r1 : r2).append(h('button', {
+        class: 'chip', type: 'button', 'aria-current': (view === it.id && !query) ? 'true' : 'false',
+        onclick: function () { setView(it.id); }
+      }, it.name, h('span', { class: 'n', text: String(it.n) })));
+    });
+    nav.append(r1, r2);
+    r2.scrollLeft = sl;
+  }
+  function setView(v) {
+    view = v;
+    subFilter = v === 'courses' ? FOOD : 'all';
+    query = ''; $('q').value = '';
+    render();
+    window.scrollTo(0, 0);
+  }
+  function renderSubs() {
+    var box = $('subs');
+    var c = CAT[view];
+    if (query || !c || !c.subs) { box.hidden = true; box.textContent = ''; return; }
+    box.hidden = false; box.textContent = '';
+    ['all'].concat(c.subs).forEach(function (s) {
+      box.append(h('button', {
+        class: 'chip', type: 'button', 'aria-current': subFilter === s ? 'true' : 'false',
+        onclick: function () { subFilter = s; render(); }
+      }, s === 'all' ? 'Toutes' : s));
+    });
+  }
+  function renderPanel() {
+    var show = !query && view === 'courses' && subFilter === FOOD;
+    $('panel').hidden = !show;
+    if (!show) return;
+    var box = $('habs');
+    box.textContent = '';
+    var sorted = habs.slice().sort(function (a, b) { return a.name.localeCompare(b.name, 'fr'); });
+    $('habHint').hidden = sorted.length > 0;
+    $('habAll').hidden = sorted.length === 0 || habEditing;
+    $('habEdit').hidden = sorted.length === 0;
+    $('habEdit').textContent = habEditing ? 'Terminé' : 'Modifier';
+    $('habEdit').setAttribute('aria-pressed', habEditing ? 'true' : 'false');
+    sorted.forEach(function (x) {
+      if (habEditing) {
+        box.append(h('button', { class: 'hab', type: 'button', 'aria-label': 'Retirer des habituels : ' + x.name, onclick: function () { removeHab(x.id); } }, x.name, h('span', { class: 'x', text: '×' })));
+      } else {
+        var inList = foodInList(x.name);
+        box.append(h('button', {
+          class: 'hab', type: 'button', disabled: inList, 'aria-label': inList ? x.name + ', déjà dans la liste' : 'Ajouter à la liste : ' + x.name,
+          onclick: function () { addFood(x.name); }
+        }, x.name, inList ? h('span', { text: '✓' }) : null));
+      }
+    });
+  }
+  function matches(t, q) {
+    var hay = (t.title + ' ' + t.note + ' ' + t.who + ' ' + t.sub + ' ' + CAT[t.cat].name).toLowerCase();
+    return hay.indexOf(q) >= 0;
+  }
+  function row(t, showCat) {
+    var c = CAT[t.cat];
+    var td = today();
+    var food = isFood(t);
+    var plain = c.note || food;
+    var meta = [];
+    if (showCat) meta.push(c.name);
+    if (t.sub && !food && (showCat || !c.subs || subFilter === 'all')) meta.push(t.sub);
+    if (t.who) meta.push('Pour ' + t.who);
+    var metaNodes = [];
+    var late = t.due && t.due < td;
+    if (late) metaNodes.push(h('span', { class: 'late', text: 'En retard : ' + fmtDate(t.due) }));
+    else if (t.due) metaNodes.push(fmtDate(t.due));
+    if (t.rec) metaNodes.push(REC[t.rec].toLowerCase());
+    var parts = meta.concat([]);
+    var line = h('div', { class: 'rmeta' });
+    var all = parts.map(function (p) { return document.createTextNode(p); }).concat(metaNodes.map(function (n) { return typeof n === 'string' ? document.createTextNode(n) : n; }));
+    all.forEach(function (n, i) { if (i > 0) line.append(document.createTextNode(' · ')); line.append(n); });
+
+    var body = h('button', { class: 'rbody' + (c.note ? ' nocheck' : ''), type: 'button', onclick: function () { openEditor(t); } },
+      h('div', { class: 'rtitle', text: t.title }),
+      all.length ? line : null,
+      (t.note && (c.note || true)) ? h('div', { class: 'rnote', text: t.note }) : null);
+
+    var side = null;
+    if (food) {
+      var isHab = !!findHab(t.title);
+      side = h('div', { class: 'rside' }, h('button', {
+        class: 'mini', type: 'button', 'aria-pressed': isHab ? 'true' : 'false',
+        onclick: function () { if (isHab) removeHab(findHab(t.title).id); else addHab(t.title); }
+      }, isHab ? 'Habituel ✓' : '+ Habituel'));
+    } else if (!plain) {
+      side = h('div', { class: 'rside' }, h('span', { class: 'pill p' + t.prio, text: PRIO[t.prio] }));
+    }
+    return h('div', { class: 'row ' + (plain ? 'plain' : 'p' + t.prio) },
+      c.note ? null : h('button', { class: 'check', type: 'button', 'aria-label': 'Marquer comme terminée : ' + t.title, onclick: function () { complete(t); } }, h('span')),
+      body, side);
+  }
+  function group(label, cls, list, showCat) {
+    var frag = document.createDocumentFragment();
+    frag.append(h('h2', { class: 'group ' + cls }, label, h('span', { class: 'n', text: String(list.length) })));
+    list.forEach(function (t) { frag.append(row(t, showCat)); });
+    return frag;
+  }
+  function byPrio(list, showCat) {
+    var frag = document.createDocumentFragment();
+    [3, 2, 1].forEach(function (p) {
+      var l = list.filter(function (t) { return t.prio === p; }).sort(cmp);
+      if (l.length) frag.append(group(PRIO[p], 'g' + p, l, showCat));
+    });
+    return frag;
+  }
+  function renderList() {
+    var box = $('list');
+    box.textContent = '';
+    var td = today();
+    var q = query.trim().toLowerCase();
+    var list;
+
+    if (q) {
+      list = tasks.filter(function (t) { return matches(t, q); });
+      if (!list.length) { box.append(h('p', { class: 'empty', text: 'Aucun résultat.' })); return; }
+      box.append(h('p', { class: 'summary', text: list.length + ' résultat' + (list.length > 1 ? 's' : '') }));
+      list.sort(cmp).forEach(function (t) { box.append(row(t, true)); });
+      return;
+    }
+
+    if (view === 'today' || view === 'late') {
+      var isToday = view === 'today';
+      var cand = tasks.filter(function (t) { return t.cat !== 'memo' && !isFood(t) && t.due && (isToday ? t.due === td : t.due < td); });
+      if (isToday) {
+        var dateTxt = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        box.append(h('p', { class: 'summary', text: dateTxt.charAt(0).toUpperCase() + dateTxt.slice(1) }));
+      }
+      if (!cand.length) { box.append(h('p', { class: 'empty', text: isToday ? "Rien de prévu pour aujourd'hui." : 'Aucune tâche en retard.' })); return; }
+      box.append(byPrio(cand, true));
+      return;
+    }
+
+    if (view === 'all') {
+      list = tasks.filter(function (t) { return t.cat !== 'memo' && !isFood(t); });
+      if (!list.length) { box.append(h('p', { class: 'empty', text: 'Aucune tâche. Touche « + Ajouter » pour commencer.' })); return; }
+      box.append(byPrio(list, true));
+      return;
+    }
+
+    var c = CAT[view];
+    list = tasks.filter(function (t) { return t.cat === view && (subFilter === 'all' || t.sub === subFilter); });
+    if (!list.length) {
+      var msg = c.note ? 'Aucune note. Touche « + Ajouter » pour en écrire une.'
+        : (view === 'courses' && subFilter === FOOD) ? 'La liste est vide. Ajoute un article ou touche un habituel.'
+        : 'Aucune tâche ici. Touche « + Ajouter » pour en créer une.';
+      box.append(h('p', { class: 'empty', text: msg }));
+      return;
+    }
+    if (c.note) { list.sort(function (a, b) { return b.created - a.created; }).forEach(function (t) { box.append(row(t, false)); }); return; }
+    if (view === 'courses' && subFilter === FOOD) { list.sort(function (a, b) { return a.title.localeCompare(b.title, 'fr'); }).forEach(function (t) { box.append(row(t, false)); }); return; }
+    box.append(byPrio(list.filter(function (t) { return !isFood(t); }), false));
+    var foods = list.filter(isFood);
+    if (foods.length) {
+      box.append(h('h2', { class: 'group gtoday' }, 'Alimentaire', h('span', { class: 'n', text: String(foods.length) })));
+      foods.sort(function (a, b) { return a.title.localeCompare(b.title, 'fr'); }).forEach(function (t) { box.append(row(t, false)); });
+    }
+  }
+  function render() {
+    renderTabs(); renderSubs(); renderPanel(); renderList(); renderBackupBar(); setStatus();
+  }
+
+  /* ---------- editor ---------- */
+  function closeModal() { $('modal').textContent = ''; document.removeEventListener('keydown', onKey); }
+  function onKey(e) { if (e.key === 'Escape') closeModal(); }
+  function openOverlay(sheet) {
+    var ov = h('div', { class: 'overlay', onclick: function (e) { if (e.target === ov) closeModal(); } }, sheet);
+    $('modal').textContent = '';
+    $('modal').append(ov);
+    document.addEventListener('keydown', onKey);
+  }
+
+  function openEditor(t) {
+    var isNew = !t;
+    var defCat = CAT[view] ? view : 'admin-perso';
+    var cur = t ? Object.assign({}, t) : norm(newId(), { cat: defCat, prio: 2, created: Date.now() });
+    if (isNew && defCat === 'courses' && subFilter !== 'all') cur.sub = subFilter;
+    if (isNew && defCat === 'appart' && subFilter !== 'all') cur.sub = subFilter;
+    var prio = cur.prio;
+
+    var title = h('input', { id: 'f-title', type: 'text', value: cur.title, autocomplete: 'off', maxlength: '200' });
+    var catSel = h('select', { id: 'f-cat' }, CATS.map(function (c) { return h('option', { value: c.id, text: c.name }); }));
+    catSel.value = cur.cat;
+    var subSel = h('select', { id: 'f-sub' });
+    var who = h('input', { id: 'f-who', type: 'text', value: cur.who, list: 'f-who-list', autocomplete: 'off', maxlength: '80' });
+    var names = {};
+    tasks.forEach(function (x) { if (x.who) names[x.who] = 1; });
+    var dl = h('datalist', { id: 'f-who-list' }, Object.keys(names).map(function (n) { return h('option', { value: n }); }));
+    var due = h('input', { id: 'f-due', type: 'date', value: cur.due });
+    var rec = h('select', { id: 'f-rec' }, Object.keys(REC).map(function (k) { return h('option', { value: k, text: REC[k] }); }));
+    rec.value = cur.rec;
+    var note = h('textarea', { id: 'f-note', value: cur.note, maxlength: '4000' });
+    var noteLbl = h('label', { for: 'f-note', text: 'Note' });
+    var err = h('p', { class: 'err', role: 'alert', hidden: true });
+
+    var segBtns = [1, 2, 3].map(function (p) {
+      var b = h('button', { type: 'button', 'data-p': String(p), 'aria-pressed': prio === p ? 'true' : 'false', text: PRIO[p],
+        onclick: function () { prio = p; segBtns.forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-p') === String(p) ? 'true' : 'false'); }); } });
+      return b;
+    });
+
+    var subWrap = h('div', { class: 'field' }, h('label', { for: 'f-sub', text: 'Rubrique' }), subSel);
+    var whoWrap = h('div', { class: 'field' }, h('label', { for: 'f-who', text: 'Pour qui' }), who, dl);
+    var prioWrap = h('div', { class: 'field' }, h('span', { class: 'lbl', text: 'Priorité' }), h('div', { class: 'seg', role: 'group', 'aria-label': 'Priorité' }, segBtns));
+    var dueWrap = h('div', { class: 'field' }, h('label', { for: 'f-due', text: 'Échéance (facultative)' }), due);
+    var recWrap = h('div', { class: 'field' }, h('label', { for: 'f-rec', text: 'Répétition' }), rec);
+
+    function sync() {
+      var c = CAT[catSel.value];
+      var keep = subSel.value || cur.sub;
+      subSel.textContent = '';
+      if (c.subs) {
+        c.subs.forEach(function (s) { subSel.append(h('option', { value: s, text: s })); });
+        subSel.value = c.subs.indexOf(keep) >= 0 ? keep : c.subs[0];
+      }
+      subWrap.hidden = !c.subs;
+      whoWrap.hidden = !c.who;
+      var food = c.id === 'courses' && subSel.value === FOOD;
+      var plain = !!c.note || food;
+      prioWrap.hidden = plain; dueWrap.hidden = plain; recWrap.hidden = plain;
+      noteLbl.textContent = c.note ? 'Contenu de la note' : 'Note';
+    }
+    catSel.addEventListener('change', function () { cur.sub = ''; sync(); });
+    subSel.addEventListener('change', sync);
+    sync();
+
+    function save() {
+      var name = title.value.trim();
+      if (!name) { err.textContent = 'Écris un titre.'; err.hidden = false; title.focus(); return; }
+      var c = CAT[catSel.value];
+      var food = c.id === 'courses' && subSel.value === FOOD;
+      var plain = !!c.note || food;
+      var out = {
+        id: cur.id, title: name, cat: c.id, sub: c.subs ? subSel.value : '', who: c.who ? who.value.trim() : '',
+        prio: plain ? 2 : prio, due: plain ? '' : due.value, rec: plain ? '' : rec.value, note: note.value.trim(), created: cur.created || Date.now()
+      };
+      if (out.rec && !out.due) out.due = today();
+      saveTask(out);
+      closeModal();
+    }
+
+    var actions = h('div', { class: 'actions' },
+      h('button', { class: 'btn primary', type: 'button', text: 'Enregistrer', onclick: save }),
+      h('button', { class: 'btn', type: 'button', text: 'Annuler', onclick: closeModal }));
+    if (!isNew) {
+      actions.append(h('button', { class: 'btn danger', type: 'button', text: 'Supprimer', onclick: function () {
+        var old = Object.assign({}, t); closeModal(); removeTask(t.id);
+        toast('Supprimée', function () { saveTask(old); });
+      } }));
+    }
+    title.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+
+    var sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': isNew ? 'Nouvelle tâche' : 'Modifier la tâche' },
+      h('h2', { text: isNew ? 'Nouvelle tâche' : 'Modifier' }),
+      h('div', { class: 'field' }, h('label', { for: 'f-title', text: 'Titre' }), title),
+      h('div', { class: 'field' }, h('label', { for: 'f-cat', text: 'Catégorie' }), catSel),
+      subWrap, whoWrap, prioWrap, dueWrap, recWrap,
+      h('div', { class: 'field' }, noteLbl, note),
+      err, actions);
+    openOverlay(sheet);
+    if (isNew) title.focus();
+  }
+
+  /* ---------- sauvegarde et aide ---------- */
+  function daysSinceBackup() {
+    var v = Number(lsGet(KEY_BK));
+    if (!v) return null;
+    return Math.max(0, Math.floor((Date.now() - v) / 86400000));
+  }
+  function setStatus() {
+    var d = daysSinceBackup();
+    var s = d === null ? 'jamais' : (d === 0 ? "aujourd'hui" : 'il y a ' + d + ' j');
+    $('status').textContent = 'Données sur cet appareil · dernière sauvegarde : ' + s;
+  }
+  function renderBackupBar() {
+    var bar = $('backupBar');
+    var d = daysSinceBackup();
+    var first = Number(lsGet(KEY_FIRST)) || Date.now();
+    var msg = '';
+    if (tasks.length) {
+      if (d === null) { if (Date.now() - first > 3 * 86400000) msg = "Tu n'as pas encore fait de sauvegarde."; }
+      else if (d >= 14) msg = 'Dernière sauvegarde il y a ' + d + ' jours.';
+    }
+    bar.textContent = '';
+    bar.hidden = !msg;
+    if (msg) bar.append(h('span', { text: msg }), h('button', { class: 'linkbtn', type: 'button', text: 'Sauvegarder', onclick: openBackup }));
+  }
+  function backupData() {
+    return {
+      app: 'ma-toudou', version: 1, exportedAt: new Date().toISOString(),
+      tasks: tasks.map(function (t) { return Object.assign({}, t); }),
+      habs: habs.map(function (x) { return { id: x.id, name: x.name, created: x.created || 0 }; })
+    };
+  }
+  function markBackup() { lsSet(KEY_BK, String(Date.now())); render(); }
+  async function doBackup(setMsg) {
+    var json = JSON.stringify(backupData(), null, 2);
+    var name = 'MA-TOUDOU-sauvegarde-' + today() + '.json';
+    var file = null;
+    try { file = new File([json], name, { type: 'application/json' }); } catch (e) { file = null; }
+    try {
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Sauvegarde MA TOUDOU' });
+        markBackup();
+        setMsg("Sauvegarde envoyée. Vérifie que le fichier est bien enregistré à l'endroit choisi.");
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') { setMsg('Sauvegarde annulée.'); return; }
+    }
+    try {
+      var blob = new Blob([json], { type: 'application/json' });
+      var a = document.createElement('a');
+      var url = URL.createObjectURL(blob);
+      a.href = url; a.download = name;
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      markBackup();
+      setMsg('Fichier enregistré dans les téléchargements de cet appareil : ' + name);
+    } catch (e) {
+      setMsg('La sauvegarde a échoué. Utilise « Copier le texte de la sauvegarde ».');
+    }
+  }
+  function copyText(text, setMsg) {
+    var done = function () { setMsg('Texte copié.'); };
+    var fail = function () { setMsg('Copie impossible ici.'); };
+    try { navigator.clipboard.writeText(text).then(done, fail); } catch (e) { fail(); }
+  }
+  function parseBackup(text) {
+    var o = JSON.parse(text);
+    if (!o || !Array.isArray(o.tasks)) throw new Error('format');
+    var ts = o.tasks.filter(function (t) { return t && typeof t === 'object'; })
+      .map(function (t) { return norm(String(t.id || newId()), t); })
+      .filter(function (t) { return t.title; });
+    var hs = (Array.isArray(o.habs) ? o.habs : []).filter(function (x) { return x && x.name; })
+      .map(function (x) { return { id: String(x.id || newId()), name: String(x.name), created: Number(x.created) || 0 }; });
+    return { tasks: ts, habs: hs };
+  }
+  function applyRestore(data, mode) {
+    var before = { tasks: tasks.slice(), habs: habs.slice() };
+    if (mode === 'replace') { tasks = data.tasks.slice(); habs = data.habs.slice(); }
+    else {
+      var idx = {};
+      tasks.forEach(function (t, i) { idx[t.id] = i; });
+      data.tasks.forEach(function (t) { if (idx[t.id] !== undefined) tasks[idx[t.id]] = t; else tasks.push(t); });
+      data.habs.forEach(function (x) { if (!findHab(x.name)) habs.push(x); });
+    }
+    persistLocal(); render();
+    return function undo() { tasks = before.tasks; habs = before.habs; persistLocal(); render(); };
+  }
+  function openRestore() {
+    var msg = h('p', { class: 'hint', role: 'status', text: 'Choisis le fichier de sauvegarde (.json), ou colle son texte.' });
+    var file = h('input', { id: 'r-file', type: 'file', accept: '.json,application/json,text/plain' });
+    var area = h('textarea', { id: 'r-text' });
+    var box = h('div', { class: 'actions' });
+    function propose(text) {
+      var data;
+      box.textContent = '';
+      try { data = parseBackup(text); } catch (e) { msg.textContent = "Ce contenu n'est pas une sauvegarde valide de MA TOUDOU."; return; }
+      msg.textContent = data.tasks.length + ' tâche' + (data.tasks.length > 1 ? 's' : '') + ' et ' + data.habs.length + ' habituel' + (data.habs.length > 1 ? 's' : '') + ' trouvés.';
+      box.append(
+        h('button', { class: 'btn primary', type: 'button', text: 'Ajouter à mes données', onclick: function () { var u = applyRestore(data, 'merge'); closeModal(); toast('Sauvegarde ajoutée.', u); } }),
+        h('button', { class: 'btn danger', type: 'button', text: 'Remplacer mes données', onclick: function () { var u = applyRestore(data, 'replace'); closeModal(); toast('Données remplacées.', u); } }));
+    }
+    file.addEventListener('change', function () {
+      var f = file.files && file.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () { propose(String(r.result)); };
+      r.onerror = function () { msg.textContent = 'Lecture du fichier impossible.'; };
+      r.readAsText(f);
+    });
+    var sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Restaurer une sauvegarde' },
+      h('h2', { text: 'Restaurer une sauvegarde' }),
+      msg,
+      h('div', { class: 'field' }, h('label', { for: 'r-file', text: 'Fichier de sauvegarde' }), file),
+      h('div', { class: 'field' }, h('label', { for: 'r-text', text: 'Ou colle ici le texte de la sauvegarde' }), area,
+        h('button', { class: 'btn', type: 'button', text: 'Lire le texte', onclick: function () { propose(area.value); } })),
+      box,
+      h('div', { class: 'actions' }, h('button', { class: 'btn', type: 'button', text: 'Fermer', onclick: closeModal })));
+    openOverlay(sheet);
+  }
+  function openBackup() {
+    var d = daysSinceBackup();
+    var msg = h('p', { class: 'hint', role: 'status', text: d === null ? "Tu n'as pas encore fait de sauvegarde." : (d === 0 ? "Dernière sauvegarde : aujourd'hui." : 'Dernière sauvegarde : il y a ' + d + ' jour' + (d > 1 ? 's' : '') + '.') });
+    var setMsg = function (t) { msg.textContent = t; };
+    var sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Sauvegarde' },
+      h('h2', { text: 'Sauvegarde' }),
+      h('p', { class: 'hint', text: 'Tes tâches sont enregistrées uniquement sur cet appareil. La sauvegarde crée un fichier que tu peux envoyer où tu veux : Drive, e-mail, WhatsApp à toi-même…' }),
+      msg,
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn primary', type: 'button', text: 'Sauvegarder maintenant', onclick: function () { doBackup(setMsg); } }),
+        h('button', { class: 'btn', type: 'button', text: 'Restaurer une sauvegarde', onclick: openRestore })),
+      h('div', { class: 'actions' },
+        h('button', { class: 'linkbtn', type: 'button', text: 'Copier le texte de la sauvegarde', onclick: function () { copyText(JSON.stringify(backupData()), setMsg); } }),
+        h('button', { class: 'linkbtn', type: 'button', text: "Revoir l'explication", onclick: openWelcome }),
+        h('button', { class: 'linkbtn', type: 'button', text: 'Fermer', onclick: closeModal })));
+    openOverlay(sheet);
+  }
+
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredPrompt = e; });
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  }
+  function platform() {
+    var ua = navigator.userAgent || '';
+    if (/iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+    if (/android/i.test(ua)) return 'android';
+    return 'desktop';
+  }
+  function openWelcome() {
+    var steps = {
+      android: "Pour l'avoir sur ton écran d'accueil : dans Chrome, touche les trois points en haut à droite, puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+      ios: "Pour l'avoir sur ton écran d'accueil : ouvre cette page dans Safari, touche l'icône Partager (un carré avec une flèche), puis « Sur l'écran d'accueil ». Ouvre ensuite l'outil toujours depuis cette icône.",
+      desktop: "Pour l'avoir comme une application : dans Chrome ou Edge, utilise l'icône d'installation à droite de la barre d'adresse, ou le menu des trois points puis « Installer »."
+    };
+    var kids = [
+      h('h2', { text: 'Bienvenue dans MA TOUDOU' }),
+      h('ul', { class: 'help' },
+        h('li', { text: "Tes tâches restent sur cet appareil. Elles ne sont envoyées nulle part." }),
+        h('li', { text: "Elles ne sont pas synchronisées avec tes autres appareils." }),
+        h('li', { text: "Fais une sauvegarde de temps en temps avec le bouton Sauvegarde. Si tu changes de téléphone ou effaces les données du navigateur, c'est le seul moyen de tout retrouver. L'outil te le rappellera." }),
+        h('li', { text: "Après une première ouverture avec du réseau, l'outil fonctionne sans connexion." }))
+    ];
+    if (!isStandalone()) kids.push(h('p', { class: 'hint', text: steps[platform()] }));
+    if (deferredPrompt && !isStandalone()) {
+      kids.push(h('button', { class: 'btn', type: 'button', text: 'Installer sur cet appareil', onclick: function () { var p = deferredPrompt; deferredPrompt = null; try { p.prompt(); } catch (e) { /* ignoré */ } } }));
+    }
+    kids.push(h('button', { class: 'btn primary', type: 'button', text: 'Compris', onclick: function () { lsSet(KEY_WELCOME, '1'); closeModal(); } }));
+    openOverlay(h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Bienvenue' }, kids));
+  }
+
+  /* ---------- événements fixes ---------- */
+  $('fab').addEventListener('click', function () { openEditor(null); });
+  $('btnBackup').addEventListener('click', openBackup);
+  $('btnSearch').addEventListener('click', function () {
+    var box = $('searchBox');
+    box.hidden = !box.hidden;
+    $('btnSearch').setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+    if (!box.hidden) $('q').focus(); else { query = ''; $('q').value = ''; render(); }
+  });
+  $('q').addEventListener('input', function (e) { query = e.target.value; render(); });
+  function submitFood() {
+    var inp = $('foodInput');
+    var name = inp.value;
+    if (!name.trim()) { inp.focus(); return; }
+    addFood(name);
+    if ($('foodHab').checked) addHab(name);
+    inp.value = ''; inp.focus();
+  }
+  $('foodAdd').addEventListener('click', submitFood);
+  $('foodInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submitFood(); } });
+  $('habAll').addEventListener('click', function () { habs.slice().forEach(function (x) { addFood(x.name); }); });
+  $('habEdit').addEventListener('click', function () { habEditing = !habEditing; renderPanel(); });
+
+  /* ---------- démarrage ---------- */
+  function init() {
+    if (!lsGet(KEY_FIRST)) lsSet(KEY_FIRST, String(Date.now()));
+    var raw = lsGet(KEY);
+    if (raw) { try { JSON.parse(raw); } catch (e) { lsSet(KEY + '.corrompu', raw); } }
+    loadLocal();
+    $('fab').disabled = false;
+    render();
+    window.addEventListener('storage', function (e) { if (e.key === KEY) { loadLocal(); render(); } });
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* ignoré */ }
+    try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); } catch (e) { /* ignoré */ }
+    if (!lsGet(KEY_WELCOME)) openWelcome();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
