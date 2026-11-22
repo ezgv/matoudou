@@ -1,5 +1,5 @@
 /* Mode hors connexion de MA TOUDOU. Pour publier une nouvelle version : changer le numéro ci-dessous. */
-const CACHE = 'toudou-v1';
+const CACHE = 'toudou-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

@@ -285,7 +285,7 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
   var CAT = {};
   CATS.forEach(function (c) { CAT[c.id] = c; });
   var PRIO = { 1: 'Peu prioritaire', 2: 'Moyen', 3: 'Urgent' };
-  var REC = { '': 'Aucune', d: 'Chaque jour', w: 'Chaque semaine', m: 'Chaque mois', y: 'Chaque année' };
+  var REC = { '': 'Aucun', d: 'Chaque jour', w: 'Chaque semaine', m: 'Chaque mois', y: 'Chaque année' };
   var FOOD = 'Alimentaire';
 
   var tasks = [];
@@ -345,6 +345,19 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
     var n = addInterval(t.due || td, t.rec);
     while (n <= td) n = addInterval(n, t.rec);
     return n;
+  }
+  function isReminderDay(t, td) {
+    if (!t.rec) return false;
+    var start = t.created ? iso(new Date(t.created)) : td;
+    if (td < start) return false;
+    if (t.due && td > t.due) return false;
+    if (t.rec === 'd') return true;
+    var a = parse(start), b = parse(td);
+    var dim = new Date(b.getFullYear(), b.getMonth() + 1, 0).getDate();
+    if (t.rec === 'w') return Math.round((b - a) / 86400000) % 7 === 0;
+    if (t.rec === 'm') return b.getDate() === Math.min(a.getDate(), dim);
+    if (t.rec === 'y') return b.getMonth() === a.getMonth() && b.getDate() === Math.min(a.getDate(), dim);
+    return false;
   }
   function fmtDate(s) {
     var td = today();
@@ -436,14 +449,8 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
   /* ---------- actions ---------- */
   function complete(t) {
     var old = Object.assign({}, t);
-    if (t.rec) {
-      var nd = nextDate(t);
-      saveTask(Object.assign({}, t, { due: nd }));
-      toast('Reprogrammée : ' + fmtDate(nd), function () { saveTask(old); });
-    } else {
-      removeTask(t.id);
-      toast('Tâche terminée et supprimée', function () { saveTask(old); });
-    }
+    removeTask(t.id);
+    toast('Tâche terminée et supprimée', function () { saveTask(old); });
   }
   function foodInList(name) {
     var n = name.trim().toLowerCase();
@@ -464,7 +471,7 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
       c[t.cat]++;
       if (t.cat !== 'memo' && !isFood(t)) {
         c.all++;
-        if (t.due === td) c.today++; else if (t.due && t.due < td) c.late++;
+        if (t.due === td || isReminderDay(t, td)) c.today++; else if (t.due && t.due < td) c.late++;
       }
     });
     return c;
@@ -548,7 +555,7 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
     var late = t.due && t.due < td;
     if (late) metaNodes.push(h('span', { class: 'late', text: 'En retard : ' + fmtDate(t.due) }));
     else if (t.due) metaNodes.push(fmtDate(t.due));
-    if (t.rec) metaNodes.push(REC[t.rec].toLowerCase());
+    if (t.rec) metaNodes.push('rappel ' + REC[t.rec].toLowerCase());
     var parts = meta.concat([]);
     var line = h('div', { class: 'rmeta' });
     var all = parts.map(function (p) { return document.createTextNode(p); }).concat(metaNodes.map(function (n) { return typeof n === 'string' ? document.createTextNode(n) : n; }));
@@ -604,7 +611,7 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
 
     if (view === 'today' || view === 'late') {
       var isToday = view === 'today';
-      var cand = tasks.filter(function (t) { return t.cat !== 'memo' && !isFood(t) && t.due && (isToday ? t.due === td : t.due < td); });
+      var cand = tasks.filter(function (t) { return t.cat !== 'memo' && !isFood(t) && (isToday ? (t.due === td || isReminderDay(t, td)) : (t.due && t.due < td)); });
       if (isToday) {
         var dateTxt = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
         box.append(h('p', { class: 'summary', text: dateTxt.charAt(0).toUpperCase() + dateTxt.slice(1) }));
@@ -686,7 +693,7 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
     var whoWrap = h('div', { class: 'field' }, h('label', { for: 'f-who', text: 'Pour qui' }), who, dl);
     var prioWrap = h('div', { class: 'field' }, h('span', { class: 'lbl', text: 'Priorité' }), h('div', { class: 'seg', role: 'group', 'aria-label': 'Priorité' }, segBtns));
     var dueWrap = h('div', { class: 'field' }, h('label', { for: 'f-due', text: 'Échéance (facultative)' }), due);
-    var recWrap = h('div', { class: 'field' }, h('label', { for: 'f-rec', text: 'Répétition' }), rec);
+    var recWrap = h('div', { class: 'field' }, h('label', { for: 'f-rec', text: "Rappel dans Aujourd'hui, jusqu'à l'échéance" }), rec);
 
     function sync() {
       var c = CAT[catSel.value];
@@ -717,7 +724,7 @@ textarea.export { width: 100%; min-height: 220px; border-radius: 10px; border: 1
         id: cur.id, title: name, cat: c.id, sub: c.subs ? subSel.value : '', who: c.who ? who.value.trim() : '',
         prio: plain ? 2 : prio, due: plain ? '' : due.value, rec: plain ? '' : rec.value, note: note.value.trim(), created: cur.created || Date.now()
       };
-      if (out.rec && !out.due) out.due = today();
+      
       saveTask(out);
       closeModal();
     }
